@@ -6,8 +6,8 @@ import io.gatling.http.Predef._
 
 import scala.concurrent.duration._
 
-class Http2Simulation extends Simulation {
-  val csvFeeder = csv("data\\http\\http10.csv")
+class Http2Simulation1Player extends Simulation {
+  val csvFeeder = csv("data\\onePlayer.csv")
 
   val httpProtocol = http
     .enableHttp2
@@ -45,5 +45,5 @@ class Http2Simulation extends Simulation {
         .delete("/emitter/" + "${nickname}"))
     .exec(sse("Close").close())
 
-  setUp(scn.inject(rampUsers(10) during (10 seconds)).protocols(httpProtocol))
+  setUp(scn.inject(atOnceUsers(1)).protocols(httpProtocol))
 }
