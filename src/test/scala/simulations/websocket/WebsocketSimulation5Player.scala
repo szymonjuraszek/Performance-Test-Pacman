@@ -10,7 +10,7 @@ class WebsocketSimulation5Player extends Simulation {
   val csvFeeder = csv("data\\fivePlayers.csv")
 
   val httpConf = http
-    .wsBaseUrl("ws://localhost:8080")
+    .wsBaseUrl("wss://localhost:8080")
 
   val scn = scenario("Websocket for 5 Players")
     .feed(csvFeeder)
@@ -49,7 +49,7 @@ class WebsocketSimulation5Player extends Simulation {
       repeat(200, "j") {
         exec(
           session => session
-            .set("newX", session("x").as[Int] - session("j").as[Int] * 4)
+            .set("newX", session("x").as[Int] - session("j").as[Int] * 5)
             .set("requestTimestamp", System.currentTimeMillis())
         )
           .exec(

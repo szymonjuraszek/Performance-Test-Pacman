@@ -7,7 +7,7 @@ import io.gatling.http.Predef._
 import scala.concurrent.duration._
 
 class Http2Simulation10Player extends Simulation {
-  val csvFeeder = csv("data\\tenPlayer.csv")
+  val csvFeeder = csv("data\\tenPlayers.csv")
 
   val httpProtocol = http
     .enableHttp2
@@ -27,14 +27,14 @@ class Http2Simulation10Player extends Simulation {
         .body(StringBody("""{ "nickname": "${nickname}" }""")).asJson
     )
     //    // ----------------------------------------------------   MOVEMENTS  ---------------------------------------------
-    .repeat(5, "i") {
-      repeat(300, "j") {
+    .repeat(15, "i") {
+      repeat(200, "j") {
         exec(
-          session => session.set("newX", session("x").as[Int] - session("j").as[Int] * 4)
+          session => session.set("newX", session("x").as[Int] - session("j").as[Int] * 5).set("timestamp", System.currentTimeMillis().toString())
         ).
           exec(http("Send message")
             .put("/player")
-            .header("requestTimestamp", System.currentTimeMillis().toString())
+            .header("requestTimestamp", "${timestamp}")
             .body(StringBody("""{ "nickname": "${nickname}", "positionX": ${newX}, "positionY": ${y}, "score": 0, "stepDirection": "HORIZON", "version": 0 } """)).asJson
           ).pause(20 millis)
       }
@@ -45,5 +45,5 @@ class Http2Simulation10Player extends Simulation {
         .delete("/emitter/" + "${nickname}"))
     .exec(sse("Close").close())
 
-  setUp(scn.inject(rampUsers(10) during (10 seconds)).protocols(httpProtocol))
+  setUp(scn.inject(rampUsers(10) during (20 seconds)).protocols(httpProtocol))
 }

@@ -27,19 +27,19 @@ class Http2Simulation1Player extends Simulation {
         .body(StringBody("""{ "nickname": "${nickname}" }""")).asJson
     )
     //    // ----------------------------------------------------   MOVEMENTS  ---------------------------------------------
-    .repeat(5, "i") {
-      repeat(300, "j") {
+    .repeat(6, "i") {
+      repeat(220, "j") {
         exec(
-          session => session.set("newX", session("x").as[Int] - session("j").as[Int] * 4)
-        ).
-          exec(http("Send message")
+          session => session.set("newX", session("x").as[Int] - session("j").as[Int] * 5).set("timestamp", System.currentTimeMillis().toString())
+        ).exec(http("Send message")
             .put("/player")
-            .header("requestTimestamp", System.currentTimeMillis().toString())
+            .header("requestTimestamp", "${timestamp}")
             .body(StringBody("""{ "nickname": "${nickname}", "positionX": ${newX}, "positionY": ${y}, "score": 0, "stepDirection": "HORIZON", "version": 0 } """)).asJson
-          ).pause(20 millis)
+          )
+          .pause(20 millis)
       }
     }
-    .pause(3)
+    .pause(1)
     .exec(
       http("delete player")
         .delete("/emitter/" + "${nickname}"))

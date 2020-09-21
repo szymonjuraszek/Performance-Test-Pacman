@@ -6,13 +6,13 @@ import io.gatling.http.Predef._
 
 import scala.concurrent.duration._
 
-class WebsocketSimulation10Player extends Simulation {
-  val csvFeeder = csv("data\\tenPlayers.csv")
+class WebsocketSimulation15Player extends Simulation {
+  val csvFeeder = csv("data\\fifteenPlayers.csv")
 
   val httpConf = http
     .wsBaseUrl("ws://localhost:8080")
 
-  val scn = scenario("Websocket for 10 Players")
+  val scn = scenario("Websocket for 15 Players")
     .feed(csvFeeder)
     .exec(ws("Websocket connection").connect("/socket"))
     .exec(ws("Connect via STOMP")
@@ -73,5 +73,5 @@ class WebsocketSimulation10Player extends Simulation {
     .pause(10)
     .exec(ws("Close WS").close)
 
-  setUp(scn.inject(rampUsers(10) during (90 seconds)).protocols(httpConf))
+  setUp(scn.inject(rampUsers(15) during (90 seconds)).protocols(httpConf))
 }
