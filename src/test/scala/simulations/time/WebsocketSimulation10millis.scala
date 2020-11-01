@@ -1,4 +1,4 @@
-package simulations.websocket
+package simulations.time
 
 import io.gatling.core.Predef._
 import io.gatling.core.scenario.Simulation
@@ -6,11 +6,11 @@ import io.gatling.http.Predef._
 
 import scala.concurrent.duration._
 
-class WebsocketSimulation10Player extends Simulation {
-  val csvFeeder = csv("data\\tenPlayers.csv")
+class WebsocketSimulation10millis extends Simulation {
+  val csvFeeder = csv("data/players-10.csv")
 
   val httpConf = http
-    .wsBaseUrl("ws://localhost:8080")
+    .wsBaseUrl("ws://83.229.84.77:8080")
 
   val scn = scenario("Websocket for 10 Players")
     .feed(csvFeeder)
@@ -19,7 +19,7 @@ class WebsocketSimulation10Player extends Simulation {
       .sendText("CONNECT\naccept-version:1.0,1.1,1.2\nheart-beat:4000,4000\n\n\000")
       .await(2 seconds)(ws.checkTextMessage("check connected message").check(regex(".*CONNECTED.*")))
     )
-    .pause(2)
+    .pause(500 millis)
     // ------------------------------------------------  SUBSCRIPTIONS -----------------------------------------
     .exec(ws("Subscribe0: ADD/PLAYERS")
       .sendText("SUBSCRIBE\nid:sub-0\ndestination:/pacman/add/players\n\n\000")
@@ -33,45 +33,45 @@ class WebsocketSimulation10Player extends Simulation {
     .exec(ws("Subscribe3: UPDATE/MONSTER")
       .sendText("SUBSCRIBE\nid:sub-3\ndestination:/pacman/update/monster\n\n\000")
     )
-    .pause(1)
+    //    .pause(1)
     //    //    // ---------------------------------------   CREATE USERS   ---------------------------------------------------
     .exec(ws("SEND JOIN/GAME")
-      .sendText("SEND\ndestination:/app/join/game\ncontent-length:23\n\n" +
+      .sendText("SEND\ndestination:/app/join/game\ncontent-length:22\n\n" +
         "{\"nickname\":\"${nickname}\"}\000")
     )
-    .pause(1)
+    //    .pause(1)
     .exec(ws("SEND ADD/PLAYER")
-      .sendText("SEND\ndestination:/app/add/player\ncontent-length:23\n\n" +
+      .sendText("SEND\ndestination:/app/add/player\ncontent-length:22\n\n" +
         "{\"nickname\":\"${nickname}\"}\000")
     )
     //    //    // ---------------------------------------   MOVEMENTS   ---------------------------------------------------
-    .repeat(70, "i") {
+    .repeat(100, "i") {
       repeat(150, "j") {
         exec(
           session => session
-            .set("newX", session("x").as[Int] - session("j").as[Int] * 5)
+            .set("newX", session("x").as[Int] - session("j").as[Int] * 4)
             .set("requestTimestamp", System.currentTimeMillis())
         )
           .exec(
             ws("Send move")
-              .sendText("SEND\ndestination:/app/send/position\ncontent-length:103\n" +
+              .sendText("SEND\ndestination:/app/send/position\ncontent-length:98\n" +
                 "requestTimestamp:${requestTimestamp}" +
                 "\n\n" +
                 "{\"nickname\":\"${nickname}\"," +
                 "\"positionX\":${newX}," +
                 "\"positionY\":${y}," +
                 "\"score\":0," +
-                "\"stepDirection\":\"HORIZON\"," +
+                "\"stepDirection\":\"HOR\"," +
                 "\"version\":0}\000"
               )
-              .await(19 millis)(
-                ws.checkTextMessage("Check answer").check(regex(".*")))
           )
-          .pause(20 millis)
+          .pause(10 millis)
       }
     }
-    .pause(10)
+    .pause(2)
     .exec(ws("Close WS").close)
 
-  setUp(scn.inject(rampUsers(10) during (90 seconds)).protocols(httpConf))
+  setUp(scn.inject(
+    nothingFor(10 seconds),
+    rampUsers(9) during (90 seconds)).protocols(httpConf))
 }
