@@ -1,4 +1,4 @@
-package simulations.size
+package simulations.time
 
 import io.gatling.core.Predef._
 import io.gatling.core.scenario.Simulation
@@ -6,13 +6,13 @@ import io.gatling.http.Predef._
 
 import scala.concurrent.duration._
 
-class WebsocketSimulation50Size extends Simulation {
-  val csvFeeder = csv("data/players-10.csv")
+class Before extends Simulation {
+  val csvFeeder = csv("data/players-2.csv")
 
   val httpConf = http
     .wsBaseUrl("ws://83.229.84.77:8080")
 
-  val scn = scenario("Websocket for 10 Players")
+  val scn = scenario("Websocket for 2 Players")
     .feed(csvFeeder)
     .exec(ws("Websocket connection").connect("/socket"))
     .exec(ws("Connect via STOMP")
@@ -21,19 +21,19 @@ class WebsocketSimulation50Size extends Simulation {
     )
     .pause(500 millis)
     // ------------------------------------------------  SUBSCRIPTIONS -----------------------------------------
-    .exec(ws("Subscribe0: ADD/PLAYERS")
-      .sendText("SUBSCRIBE\nid:sub-0\ndestination:/pacman/add/players\n\n\000")
-    )
-    .exec(ws("Subscribe1: REMOVE/PLAYER")
-      .sendText("SUBSCRIBE\nid:sub-1\ndestination:/pacman/remove/player\n\n\000")
-    )
+//    .exec(ws("Subscribe0: ADD/PLAYERS")
+//      .sendText("SUBSCRIBE\nid:sub-0\ndestination:/pacman/add/players\n\n\000")
+//    )
+//    .exec(ws("Subscribe1: REMOVE/PLAYER")
+//      .sendText("SUBSCRIBE\nid:sub-1\ndestination:/pacman/remove/player\n\n\000")
+//    )
     .exec(ws("Subscribe2: UPDATE/PLAYER")
       .sendText("SUBSCRIBE\nid:sub-2\ndestination:/pacman/update/player\n\n\000")
     )
     .exec(ws("Subscribe3: UPDATE/MONSTER")
       .sendText("SUBSCRIBE\nid:sub-3\ndestination:/pacman/update/monster\n\n\000")
     )
-    //    .pause(1)
+//        .pause(1)
     //    //    // ---------------------------------------   CREATE USERS   ---------------------------------------------------
     .exec(ws("SEND JOIN/GAME")
       .sendText("SEND\ndestination:/app/join/game\ncontent-length:22\n\n" +
@@ -45,8 +45,8 @@ class WebsocketSimulation50Size extends Simulation {
         "{\"nickname\":\"${nickname}\"}\000")
     )
     //    //    // ---------------------------------------   MOVEMENTS   ---------------------------------------------------
-    .repeat(100, "i") {
-      repeat(150, "j") {
+    .repeat(20, "i") {
+      repeat(100, "j") {
         exec(
           session => session
             .set("newX", session("x").as[Int] - session("j").as[Int] * 4)
@@ -65,13 +65,12 @@ class WebsocketSimulation50Size extends Simulation {
                 "\"version\":0}\000"
               )
           )
-          .pause(21 millis)
+          .pause(200 millis)
       }
     }
-    .pause(2)
+//    .pause(2)
     .exec(ws("Close WS").close)
 
   setUp(scn.inject(
-    nothingFor(10 seconds),
-    rampUsers(9) during (90 seconds)).protocols(httpConf))
+    atOnceUsers(3)).protocols(httpConf))
 }
